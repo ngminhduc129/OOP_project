@@ -102,23 +102,94 @@ Hệ thống có 25 lớp chia thành 5 tầng. Chiều gọi chỉ đi xuống,
 ### Cấu trúc thư mục
 
 ```
+
 SecureMessagingSystem/
 ├── pyproject.toml
-├── data/                       # keys/ và logs/ (không commit nội dung)
-├── docs/                       # UML, sơ đồ, báo cáo
-├── src/secure_messaging/
-│   ├── __main__.py             # điểm khởi động, lắp ghép các thành phần
-│   ├── presentation/
-│   ├── services/
-│   ├── business/
-│   │   ├── crypto/             # ICipher, CipherBase, AES, RSA, ECC
-│   │   ├── arithmetic/         # BigIntCalculator, EllipticCurve
-│   │   └── signing/            # ISigner, RsaSigner, EcdsaSigner
-│   ├── entities/
-│   │   └── keys/               # AsymmetricKey, PublicKey, PrivateKey, KeyPair
-│   └── infrastructure/
-│       └── persistence/        # IKeyRepository, FileKeyRepository
+├── README.md
+├── .gitignore
+│
+├── config/
+│   └── config.json
+│
+├── data/
+│   ├── keys/
+│   └── logs/
+│
+├── docs/
+│   ├── uml/
+│   ├── use_cases/
+│   └── reports/
+│
+├── src/
+│   └── secure_messaging/
+│       ├── __init__.py
+│       ├── __main__.py
+│       │
+│       ├── presentation/
+│       │   ├── __init__.py
+│       │   └── console_menu.py
+│       │
+│       ├── services/
+│       │   ├── __init__.py
+│       │   ├── key_service.py
+│       │   ├── secure_messenger.py
+│       │   └── audit_logger.py
+│       │
+│       ├── business/
+│       │   ├── __init__.py
+│       │   ├── crypto/
+│       │   │   ├── __init__.py
+│       │   │   ├── interfaces.py
+│       │   │   ├── cipher_base.py
+│       │   │   ├── aes_cipher.py
+│       │   │   ├── rsa_cipher.py
+│       │   │   ├── ecc_cipher.py
+│       │   │   └── cipher_factory.py
+│       │   │
+│       │   ├── arithmetic/
+│       │   │   ├── __init__.py
+│       │   │   ├── bigint_calculator.py
+│       │   │   ├── ec_point.py
+│       │   │   └── elliptic_curve.py
+│       │   │
+│       │   └── signing/
+│       │       ├── __init__.py
+│       │       ├── interfaces.py
+│       │       ├── rsa_signer.py
+│       │       ├── ecdsa_signer.py
+│       │       └── digital_signature.py
+│       │
+│       ├── entities/
+│       │   ├── __init__.py
+│       │   ├── user.py
+│       │   └── keys/
+│       │       ├── __init__.py
+│       │       ├── asymmetric_key.py
+│       │       ├── public_key.py
+│       │       ├── private_key.py
+│       │       └── key_pair.py
+│       │
+│       ├── infrastructure/
+│       │   ├── __init__.py
+│       │   ├── config/
+│       │   │   ├── __init__.py
+│       │   │   └── app_config.py
+│       │   └── persistence/
+│       │       ├── __init__.py
+│       │       ├── key_repository.py
+│       │       └── file_key_repository.py
+│       │
+│       └── exceptions/
+│           ├── __init__.py
+│           ├── crypto_exception.py
+│           ├── key_revoked_exception.py
+│           └── key_expired_exception.py
+│
 └── tests/
+    ├── unit/
+    ├── integration/
+    └── conftest.py
+
 ```
 
 ## Quy tắc nghiệp vụ
