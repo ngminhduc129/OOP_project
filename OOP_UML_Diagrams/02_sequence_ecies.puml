@@ -1,0 +1,46 @@
+@startuml
+title Sequence - UC1: Mã hóa dữ liệu bằng ECC-ECIES
+autonumber
+skinparam shadowing false
+
+actor "Người dùng" as User
+participant ConsoleMenu
+participant CipherFactory
+participant SecureMessenger
+participant EccCipher
+participant EllipticCurve
+participant "ECPoint / KeyPair" as ECCData
+participant AuditLogger
+
+User -> ConsoleMenu : HandleEncrypt()
+ConsoleMenu -> User : Yêu cầu dữ liệu, thuật toán,\nthông tin khóa
+User --> ConsoleMenu : Dữ liệu + ECC + khóa phù hợp
+
+ConsoleMenu -> CipherFactory : CreateAsymmetric(ECC, keyPair)
+CipherFactory -> EccCipher : khởi tạo EccCipher
+EccCipher --> CipherFactory : cipher
+CipherFactory --> ConsoleMenu : ICipher
+
+ConsoleMenu -> SecureMessenger : SetCipher(cipher)
+ConsoleMenu -> SecureMessenger : Send(data)
+SecureMessenger -> EccCipher : Encrypt(data)
+
+EccCipher -> EllipticCurve : tạo/sử dụng điểm ECC hợp lệ
+EllipticCurve -> ECCData : kiểm tra / thao tác ECPoint
+ECCData --> EllipticCurve : kết quả điểm
+EllipticCurve --> EccCipher : kết quả phép toán ECC
+
+EccCipher -> EccCipher : DeriveSharedKey()
+note right of EccCipher
+  Thực hiện luồng ECIES theo
+  cấu hình triển khai của dự án.
+  Chi tiết KDF và đóng gói dữ liệu
+  cần thống nhất trong code.
+end note
+
+EccCipher --> SecureMessenger : ciphertext
+SecureMessenger -> AuditLogger : MessageProcessed(event)
+AuditLogger -> AuditLogger : OnMessageProcessed(event)
+SecureMessenger --> ConsoleMenu : ciphertext
+ConsoleMenu --> User : Hiển thị bản mã
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+title Activity - UC7: Thu hồi khóa và ghi nhận nhật ký
+skinparam shadowing false
+
+|Quản trị viên|
+start
+:Chọn chức năng thu hồi khóa;
+:Nhập owner / định danh khóa;
+
+|ConsoleMenu|
+:Nhận yêu cầu thu hồi;
+:Kiểm tra User.IsAdmin();
+
+if (Có quyền Admin?) then (Có)
+  |KeyService|
+  :Kiểm tra khóa tồn tại;
+  :Kiểm tra trạng thái thu hồi hiện tại;
+
+  if (Khóa tồn tại và chưa thu hồi?) then (Có)
+    :Revoke(owner);
+
+    |IKeyRepository|
+    :Revoke(owner);
+
+    if (Cập nhật kho thành công?) then (Có)
+      |ConsoleMenu|
+      :Thông báo thu hồi thành công;
+
+      |SecureMessenger / AuditLogger|
+      :Phát sự kiện hoạt động;
+      :AuditLogger ghi bản ghi;
+    else (Không)
+      |ConsoleMenu|
+      :Thông báo thu hồi thất bại;
+    endif
+  else (Không)
+    |ConsoleMenu|
+    :Thông báo khóa không tồn tại\nhoặc đã thu hồi;
+  endif
+
+else (Không)
+  |ConsoleMenu|
+  :Từ chối thao tác;
+endif
+
+|Quản trị viên|
+:Nhận kết quả;
+stop
+@enduml

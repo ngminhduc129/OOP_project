@@ -1,0 +1,48 @@
+@startuml
+title Sequence - UC3: Sinh cặp khóa RSA
+autonumber
+skinparam shadowing false
+
+actor "Người dùng" as User
+participant ConsoleMenu
+participant AppConfig
+participant KeyService
+participant BigIntCalculator
+participant "PublicKey / PrivateKey" as KeyParts
+participant KeyPair
+
+User -> ConsoleMenu : Chọn sinh khóa
+ConsoleMenu -> User : Nhập owner và chọn RSA
+User --> ConsoleMenu : owner, RSA
+
+ConsoleMenu -> AppConfig : Load() / Get(RSA settings)
+AppConfig --> ConsoleMenu : tham số cấu hình
+ConsoleMenu -> KeyService : Generate(owner, RSA)
+KeyService -> KeyService : kiểm tra owner và tham số RSA
+
+KeyService -> BigIntCalculator : GeneratePrime(pBits)
+BigIntCalculator -> BigIntCalculator : IsProbablePrime(candidate)\n(Miller-Rabin)
+BigIntCalculator --> KeyService : p
+
+KeyService -> BigIntCalculator : GeneratePrime(qBits)
+BigIntCalculator -> BigIntCalculator : IsProbablePrime(candidate)\n(Miller-Rabin)
+BigIntCalculator --> KeyService : q
+
+KeyService -> KeyService : tính n = p*q và phi(n)
+KeyService -> BigIntCalculator : Gcd(e, phi)
+BigIntCalculator --> KeyService : gcd
+KeyService -> BigIntCalculator : ModInverse(e, phi)
+BigIntCalculator --> KeyService : d
+
+KeyService -> KeyParts : tạo PublicKey(n,e)
+KeyService -> KeyParts : tạo PrivateKey(d và material cần thiết)
+KeyService -> KeyPair : KeyPair(publicKey, privateKey)
+KeyPair --> KeyService : keyPair
+KeyService --> ConsoleMenu : keyPair
+ConsoleMenu --> User : Thông báo sinh khóa thành công
+
+alt Tham số không hợp lệ hoặc sinh khóa thất bại
+  KeyService --> ConsoleMenu : CryptoException
+  ConsoleMenu --> User : Hiển thị lỗi
+end
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+title Sequence - UC5/UC6: Ký và xác minh chữ ký số
+autonumber
+skinparam shadowing false
+
+actor "Người dùng" as User
+participant ConsoleMenu
+participant SecureMessenger
+participant KeyService
+participant HashService
+participant "ISigner\n(RsaSigner / EcdsaSigner)" as Signer
+participant DigitalSignature
+participant AuditLogger
+
+== Ký số - UC5 ==
+User -> ConsoleMenu : HandleSign()
+ConsoleMenu -> SecureMessenger : Sign(data, owner, algorithm)
+SecureMessenger -> KeyService : EnsureNotRevoked(owner)
+KeyService --> SecureMessenger : khóa hợp lệ
+SecureMessenger -> HashService : SHA256(data)
+HashService --> SecureMessenger : digest
+SecureMessenger -> Signer : Sign(digest, privateKey)\n[Prehashed]
+Signer --> SecureMessenger : signature value
+SecureMessenger -> DigitalSignature : tạo chữ ký + metadata
+DigitalSignature --> SecureMessenger : DigitalSignature
+SecureMessenger -> AuditLogger : MessageProcessed(Sign event)
+SecureMessenger --> ConsoleMenu : DigitalSignature
+ConsoleMenu --> User : Trả chữ ký số
+
+== Xác minh - UC6 ==
+User -> ConsoleMenu : HandleVerify()
+ConsoleMenu -> SecureMessenger : Verify(data, signature, publicKey)
+SecureMessenger -> HashService : SHA256(data)
+HashService --> SecureMessenger : digest
+SecureMessenger -> Signer : Verify(digest, signature, publicKey)\n[Prehashed]
+Signer --> SecureMessenger : true / false
+SecureMessenger --> ConsoleMenu : kết quả xác minh
+ConsoleMenu --> User : Hiển thị hợp lệ / không hợp lệ
+
+note over HashService,Signer
+  HashService băm đúng một lần.
+  Signer nhận digest ở chế độ Prehashed,
+  tránh băm lặp.
+end note
+@enduml
