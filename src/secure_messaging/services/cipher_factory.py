@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any, ClassVar
 
 from secure_messaging.business.crypto.aes_cipher import AesCipher
+from secure_messaging.business.crypto.chacha20_cipher import ChaCha20Cipher
 from secure_messaging.business.crypto.ecc_cipher import EccCipher
 from secure_messaging.business.crypto.interfaces import ICipher
 from secure_messaging.business.crypto.rsa_cipher import RsaCipher
@@ -83,5 +84,6 @@ class CipherFactory:
 
 
 CipherFactory.register_symmetric(CipherType.AES, AesCipher)
+CipherFactory.register_symmetric(CipherType.CHACHA20, ChaCha20Cipher)
 CipherFactory.register_asymmetric(CipherType.RSA, RsaCipher)
 CipherFactory.register_asymmetric(CipherType.ECC, EccCipher)

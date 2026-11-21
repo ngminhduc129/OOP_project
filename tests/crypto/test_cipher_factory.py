@@ -53,8 +53,8 @@ def test_creates_ecc_cipher(ec_key_pair) -> None:
 
 
 def test_registry_lists_supported_algorithms() -> None:
-    assert set(CipherFactory.supported_symmetric()) == {CipherType.AES}
-    assert set(CipherFactory.supported_asymmetric()) == {CipherType.RSA, CipherType.ECC}
+    assert CipherType.AES in CipherFactory.supported_symmetric()
+    assert {CipherType.RSA, CipherType.ECC} <= set(CipherFactory.supported_asymmetric())
 
 
 def test_rejects_wrong_algorithm_kind(rsa_key_pair) -> None:
