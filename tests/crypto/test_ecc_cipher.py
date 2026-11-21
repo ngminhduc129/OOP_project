@@ -63,7 +63,7 @@ def test_tc33_rejects_malformed_packets(ec_key_pair) -> None:
 
     for malformed in (
         b"",
-        ciphertext[: UNCOMPRESSED_POINT_SIZE],
+        ciphertext[:UNCOMPRESSED_POINT_SIZE],
         bytes(bad_prefix),
         off_curve_point,
         coordinate_out_of_range,

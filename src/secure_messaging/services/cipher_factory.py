@@ -45,9 +45,7 @@ class CipherFactory:
             raise CryptoException("Loại thuật toán không hợp lệ")
         creator = cls._symmetric_creators.get(cipher_type)
         if creator is None:
-            raise CryptoException(
-                f"Thuật toán {cipher_type.value} không hỗ trợ mã hóa đối xứng"
-            )
+            raise CryptoException(f"Thuật toán {cipher_type.value} không hỗ trợ mã hóa đối xứng")
         return creator(key)
 
     @classmethod
@@ -73,9 +71,7 @@ class CipherFactory:
         return tuple(cls._asymmetric_creators)
 
     @staticmethod
-    def _register(
-        registry: dict[CipherType, Any], cipher_type: CipherType, creator: Any
-    ) -> None:
+    def _register(registry: dict[CipherType, Any], cipher_type: CipherType, creator: Any) -> None:
         if not isinstance(cipher_type, CipherType):
             raise CryptoException("Loại thuật toán không hợp lệ")
         if not callable(creator):

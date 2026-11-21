@@ -109,9 +109,4 @@ class RsaCipher(CipherBase):
         return AesCipher(aes_key).decrypt(body)
 
     def _min_ciphertext_length(self) -> int:
-        return (
-            WRAPPED_LENGTH_SIZE
-            + self._private_key.key_size // 8
-            + NONCE_SIZE
-            + TAG_SIZE
-        )
+        return WRAPPED_LENGTH_SIZE + self._private_key.key_size // 8 + NONCE_SIZE + TAG_SIZE

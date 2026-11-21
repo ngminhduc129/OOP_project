@@ -93,16 +93,15 @@ def test_every_encryption_uses_fresh_aes_key_and_nonce(rsa_key_pair) -> None:
     first_nonce = first[WRAPPED_LENGTH_SIZE + wrapped_length :][:12]
     second_nonce = second[WRAPPED_LENGTH_SIZE + wrapped_length :][:12]
     assert first_nonce != second_nonce
-    assert first[WRAPPED_LENGTH_SIZE : WRAPPED_LENGTH_SIZE + wrapped_length] != (
-        second[WRAPPED_LENGTH_SIZE : WRAPPED_LENGTH_SIZE + wrapped_length]
+    assert (
+        first[WRAPPED_LENGTH_SIZE : WRAPPED_LENGTH_SIZE + wrapped_length]
+        != (second[WRAPPED_LENGTH_SIZE : WRAPPED_LENGTH_SIZE + wrapped_length])
     )
 
 
 def test_rejects_rsa_key_smaller_than_2048_bits(key_pair_factory) -> None:
     """QT5: khóa RSA nhỏ hơn 2048 bit bị từ chối."""
-    weak_pair = key_pair_factory(
-        rsa.generate_private_key(public_exponent=65537, key_size=1024)
-    )
+    weak_pair = key_pair_factory(rsa.generate_private_key(public_exponent=65537, key_size=1024))
 
     with pytest.raises(CryptoException):
         RsaCipher(weak_pair)

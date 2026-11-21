@@ -27,9 +27,7 @@ class AesCipher(CipherBase):
         if not isinstance(key, bytes):
             raise CryptoException("Khóa AES phải là kiểu bytes")
         if len(key) not in VALID_KEY_SIZES:
-            raise CryptoException(
-                "Khóa AES phải dài 16, 24 hoặc 32 byte (AES-128/192/256) - QT1"
-            )
+            raise CryptoException("Khóa AES phải dài 16, 24 hoặc 32 byte (AES-128/192/256) - QT1")
         self._key = key
         self._aead = AESGCM(key)
 

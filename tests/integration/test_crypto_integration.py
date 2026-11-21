@@ -77,18 +77,16 @@ def test_ciphertext_from_another_algorithm_is_rejected(rsa_key_pair, ec_key_pair
         _build_cipher("ECC", rsa_key_pair, ec_key_pair).decrypt(rsa_ciphertext)
 
 
-def test_plaintext_is_never_recovered_with_wrong_key(rsa_key_pair, ec_key_pair, rsa_key_pair_other, ec_key_pair_other) -> None:
+def test_plaintext_is_never_recovered_with_wrong_key(
+    rsa_key_pair, ec_key_pair, rsa_key_pair_other, ec_key_pair_other
+) -> None:
     for_alice_rsa = _build_cipher("RSA", rsa_key_pair, ec_key_pair).encrypt(PLAINTEXT)
     for_alice_ecc = _build_cipher("ECC", rsa_key_pair, ec_key_pair).encrypt(PLAINTEXT)
 
     with pytest.raises(CryptoException):
-        CipherFactory.create_asymmetric(CipherType.RSA, rsa_key_pair_other).decrypt(
-            for_alice_rsa
-        )
+        CipherFactory.create_asymmetric(CipherType.RSA, rsa_key_pair_other).decrypt(for_alice_rsa)
     with pytest.raises(CryptoException):
-        CipherFactory.create_asymmetric(CipherType.ECC, ec_key_pair_other).decrypt(
-            for_alice_ecc
-        )
+        CipherFactory.create_asymmetric(CipherType.ECC, ec_key_pair_other).decrypt(for_alice_ecc)
 
 
 def test_large_payload_roundtrip_for_hybrid_schemes(rsa_key_pair, ec_key_pair) -> None:
