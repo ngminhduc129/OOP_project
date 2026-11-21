@@ -1,0 +1,260 @@
+classDiagram
+direction LR
+
+class ICipher {
+  <<interface>>
+  +CipherType Type
+  +Encrypt(data)
+  +Decrypt(data)
+}
+
+class CipherType {
+  <<enumeration>>
+  AES
+  RSA
+  ECC
+}
+
+class CipherBase {
+  <<abstract>>
+  +CipherType Type
+  +Encrypt(data)
+  +Decrypt(data)
+  #ValidateInput(data)
+  #DoEncrypt(data)*
+  #DoDecrypt(data)*
+}
+
+class AesCipher {
+  -_key
+  +AesCipher(key)
+  #DoEncrypt(data)
+  #DoDecrypt(data)
+  +GenerateNonce()
+}
+
+class RsaCipher {
+  -_keyPair
+  +RsaCipher(keyPair)
+  #DoEncrypt(data)
+  #DoDecrypt(data)
+  +MaxBlockSize()
+}
+
+class EccCipher {
+  -_keyPair
+  -_curve
+  +EccCipher(keyPair, curve)
+  #DoEncrypt(data)
+  #DoDecrypt(data)
+  +DeriveSharedKey()
+}
+
+class CipherFactory {
+  +CreateSymmetric(type, key) ICipher
+  +CreateAsymmetric(type, keyPair) ICipher
+}
+
+class EllipticCurve {
+  +P
+  +A
+  +B
+  +N
+  +IsOnCurve(point)
+  +Add(p1, p2)
+  +Double(point)
+  +Multiply(point, scalar)
+  +Named(name)$
+}
+
+class BigIntCalculator {
+  <<static>>
+  +ModPow(base, exp, mod)$
+  +ModInverse(a, mod)$
+  +ModSqrt(a, p)$
+  +Gcd(a, b)$
+  +IsProbablePrime(n)$
+  +GeneratePrime(bits)$
+}
+
+class AsymmetricKey {
+  <<abstract>>
+  +Algorithm
+  +Bits
+  +CreatedAt
+  +ExpiresAt
+  +IsExpired()
+}
+
+class PublicKey {
+  -_data
+  +Export()
+}
+
+class PrivateKey {
+  -_material
+  +GetMaterial()$
+  +Wipe()
+}
+
+class KeyPair {
+  +Public
+  +Private
+}
+
+class ISigner {
+  <<interface>>
+  +Algorithm
+  +Sign(digest, privateKey)
+  +Verify(digest, signature, publicKey)
+}
+
+class RsaSigner {
+  +Sign(digest, privateKey)
+  +Verify(digest, signature, publicKey)
+  +PssEncode(digest)
+}
+
+class EcdsaSigner {
+  -_curve
+  +Sign(digest, privateKey)
+  +Verify(digest, signature, publicKey)
+  +DeterministicK(digest, privateKey)
+}
+
+class DigitalSignature {
+  +Value
+  +SignerId
+  +Algorithm
+  +CreatedAt
+  +ToBase64()
+}
+
+class IKeyRepository {
+  <<interface>>
+  +Save(owner, keyPair)
+  +Load(owner) KeyPair
+  +Revoke(owner)
+  +IsRevoked(owner) bool
+}
+
+class FileKeyRepository {
+  -_dir
+  +Save(owner, keyPair)
+  +Load(owner) KeyPair
+  +Revoke(owner)
+  +IsRevoked(owner) bool
+  +PathFor(owner)
+}
+
+class KeyService {
+  -_repo
+  +Generate(owner, algorithm)
+  +Get(owner)
+  +Revoke(owner)
+  +EnsureNotRevoked(owner)
+}
+
+class SecureMessenger {
+  -_cipher
+  -_signer
+  -_keys
+  +MessageProcessed
+  +SetCipher(cipher)
+  +Send(data)
+  +Receive(data)
+  +Sign(data, owner, algorithm) DigitalSignature
+  +Verify(data, signature, publicKey) bool
+}
+
+class AuditLogger {
+  -_logPath
+  +Subscribe(messenger)
+  +OnMessageProcessed(event)
+  +ReadAll()
+}
+
+class User {
+  +Name
+  +Role
+  +IsAdmin() bool
+}
+
+class ConsoleMenu {
+  -_messenger
+  -_keys
+  -_logger
+  -_user
+  +Run()
+  +HandleEncrypt()
+  +HandleSign()
+  +HandleVerify()
+  +ViewLog()
+  +RevokeKey()
+}
+
+class CryptoException {
+  +CryptoException(message)
+}
+
+class ECPoint {
+  +X
+  +Y
+  +IsInfinity
+  +IsAtInfinity() bool
+}
+
+class AppConfig {
+  -_config_path
+  -_settings
+  +Load()
+  +Get(key)
+}
+
+class HashService {
+  +SHA256(data) bytes
+}
+
+ICipher <|.. CipherBase : implements
+CipherBase <|-- AesCipher
+CipherBase <|-- RsaCipher
+CipherBase <|-- EccCipher
+CipherBase ..> CryptoException : raises
+CipherFactory ..> ICipher : creates
+CipherFactory ..> CipherType : reads
+
+EllipticCurve ..> ECPoint : operates on
+EccCipher ..> EllipticCurve : uses
+EllipticCurve ..> BigIntCalculator : uses
+
+AsymmetricKey <|-- PublicKey
+AsymmetricKey <|-- PrivateKey
+KeyPair *-- PublicKey
+KeyPair *-- PrivateKey
+
+ISigner <|.. RsaSigner
+ISigner <|.. EcdsaSigner
+RsaSigner ..> HashService : accepts SHA-256 digest
+EcdsaSigner ..> HashService : accepts SHA-256 digest
+RsaSigner ..> DigitalSignature : creates/verifies
+EcdsaSigner ..> DigitalSignature : creates/verifies
+
+IKeyRepository <|.. FileKeyRepository
+KeyService --> IKeyRepository : delegates
+KeyService ..> KeyPair : manages
+KeyService ..> AppConfig : reads settings
+
+SecureMessenger o-- ICipher : current strategy
+SecureMessenger --> KeyService : key lifecycle
+SecureMessenger --> ISigner : signing strategy
+SecureMessenger ..> DigitalSignature : uses
+AuditLogger ..> SecureMessenger : subscribes to event
+
+ConsoleMenu --> SecureMessenger : calls
+ConsoleMenu --> KeyService : calls
+ConsoleMenu --> AuditLogger : reads
+ConsoleMenu --> User : checks role
+
+note for HashService "SHA256 được gọi đúng một lần.\nSigner nhận digest ở chế độ Prehashed."
+note for ECPoint "Value Object; EllipticCurve thực hiện phép toán điểm."
+note for SecureMessenger "Phát MessageProcessed; không phụ thuộc ngược vào AuditLogger."

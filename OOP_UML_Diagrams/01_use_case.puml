@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Người dùng" as User
+actor "Quản trị viên" as Admin
+Admin --|> User
+
+rectangle "Hệ thống mật mã và chữ ký số" {
+  usecase "UC1\nMã hóa dữ liệu" as UC1
+  usecase "UC2\nNhận dữ liệu và giải mã" as UC2
+  usecase "UC3\nSinh cặp khóa công khai\nvà khóa riêng tư" as UC3
+  usecase "UC4\nLưu và tải cặp khóa\ntừ kho lưu trữ" as UC4
+  usecase "UC5\nKý số tài liệu" as UC5
+  usecase "UC6\nXác minh chữ ký số" as UC6
+  usecase "UC7\nThu hồi khóa" as UC7
+  usecase "UC8\nXem nhật ký hoạt động\nhệ thống" as UC8
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+Admin --> UC7
+Admin --> UC8
+
+note bottom of UC1
+  Thuật toán là lựa chọn trong luồng:
+  AES-GCM, RSA-OAEP hoặc ECC-ECIES.
+end note
+
+note bottom of UC5
+  Lựa chọn RSA-PSS hoặc ECDSA.
+  HashService.SHA256 băm một lần;
+  Signer nhận digest ở chế độ Prehashed.
+end note
+
+note bottom of UC7
+  Chỉ User có Role = Admin
+  mới được thực hiện thao tác.
+end note
+
+note bottom of UC8
+  Chỉ Admin được đọc nhật ký.
+end note
+@enduml
