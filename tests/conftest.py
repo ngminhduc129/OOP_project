@@ -57,6 +57,12 @@ def make_key_pair(private_key: Any) -> FakeKeyPair:
 
 
 @pytest.fixture(scope="session")
+def key_pair_factory():
+    """Trả về hàm bọc private key thành cặp khóa giả cho test cần khóa riêng."""
+    return make_key_pair
+
+
+@pytest.fixture(scope="session")
 def rsa_key_pair() -> FakeKeyPair:
     """Cặp khóa RSA 2048 bit cho người dùng A."""
     return make_key_pair(rsa.generate_private_key(public_exponent=65537, key_size=2048))
