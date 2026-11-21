@@ -3,9 +3,9 @@ direction LR
 
 class ICipher {
   <<interface>>
-  +CipherType Type
-  +Encrypt(data)
-  +Decrypt(data)
+  +cipher_type: CipherType
+  +encrypt(data: bytes) bytes
+  +decrypt(ciphertext: bytes) bytes
 }
 
 class CipherType {
@@ -13,68 +13,88 @@ class CipherType {
   AES
   RSA
   ECC
+  CHACHA20
 }
 
 class CipherBase {
   <<abstract>>
-  +CipherType Type
-  +Encrypt(data)
-  +Decrypt(data)
-  #ValidateInput(data)
-  #DoEncrypt(data)*
-  #DoDecrypt(data)*
+  +cipher_type: CipherType
+  +encrypt(data: bytes) bytes
+  +decrypt(ciphertext: bytes) bytes
+  #_validate_bytes(value, name)$
+  #do_encrypt(data)*
+  #do_decrypt(ciphertext)*
+  #_min_ciphertext_length()* int
 }
 
 class AesCipher {
-  -_key
-  +AesCipher(key)
-  #DoEncrypt(data)
-  #DoDecrypt(data)
-  +GenerateNonce()
+  -_key: bytes
+  -_aead: AESGCM
+  +__init__(key: bytes)
+  +key_size() int
+  +generate_nonce() bytes
+  #_encrypt_with_nonce(data, nonce) bytes
+  #do_encrypt(data)
+  #do_decrypt(ciphertext)
+  #_min_ciphertext_length() int
 }
 
 class RsaCipher {
-  -_keyPair
-  +RsaCipher(keyPair)
-  #DoEncrypt(data)
-  #DoDecrypt(data)
-  +MaxBlockSize()
+  -_key_pair
+  -_public_key
+  -_private_key
+  +__init__(key_pair)
+  +max_block_size() int
+  #do_encrypt(data)
+  #do_decrypt(ciphertext)
+  #_min_ciphertext_length() int
 }
 
 class EccCipher {
-  -_keyPair
-  -_curve
-  +EccCipher(keyPair, curve)
-  #DoEncrypt(data)
-  #DoDecrypt(data)
-  +DeriveSharedKey()
+  -_key_pair
+  -_curve: EllipticCurve
+  -_public_key
+  -_private_key
+  +__init__(key_pair, curve=None)
+  +derive_shared_key(private_key, peer_public_key) bytes
+  #do_encrypt(data)
+  #do_decrypt(ciphertext)
+  #_min_ciphertext_length() int
 }
 
 class CipherFactory {
-  +CreateSymmetric(type, key) ICipher
-  +CreateAsymmetric(type, keyPair) ICipher
+  -_symmetric_creators$
+  -_asymmetric_creators$
+  +create_symmetric(cipher_type, key) ICipher$
+  +create_asymmetric(cipher_type, key_pair) ICipher$
+  +register_symmetric(cipher_type, creator)$
+  +register_asymmetric(cipher_type, creator)$
+  +supported_symmetric() tuple$
+  +supported_asymmetric() tuple$
 }
 
 class EllipticCurve {
-  +P
-  +A
-  +B
-  +N
-  +IsOnCurve(point)
-  +Add(p1, p2)
-  +Double(point)
-  +Multiply(point, scalar)
-  +Named(name)$
+  +p: int
+  +a: int
+  +b: int
+  +n: int
+  +g: ECPoint
+  +is_on_curve(point) bool
+  +validate_public_key(point)
+  +add(point1, point2) ECPoint
+  +double(point) ECPoint
+  +multiply(point, scalar) ECPoint
+  +named(name="P-256") EllipticCurve$
 }
 
 class BigIntCalculator {
   <<static>>
-  +ModPow(base, exp, mod)$
-  +ModInverse(a, mod)$
-  +ModSqrt(a, p)$
-  +Gcd(a, b)$
-  +IsProbablePrime(n)$
-  +GeneratePrime(bits)$
+  +mod_pow(base, exponent, modulus)$ int
+  +mod_inverse(a, modulus)$ int
+  +mod_sqrt(a, prime)$ int
+  +gcd(a, b)$ int
+  +is_probable_prime(n)$ bool
+  +generate_prime(bits)$ int
 }
 
 class AsymmetricKey {
@@ -198,10 +218,11 @@ class CryptoException {
 }
 
 class ECPoint {
-  +X
-  +Y
-  +IsInfinity
-  +IsAtInfinity() bool
+  +x: int | None
+  +y: int | None
+  +is_infinity: bool
+  +infinity() ECPoint$
+  +is_at_infinity() bool
 }
 
 class AppConfig {
@@ -225,6 +246,8 @@ CipherFactory ..> CipherType : reads
 
 EllipticCurve ..> ECPoint : operates on
 EccCipher ..> EllipticCurve : uses
+EccCipher ..> AesCipher : uses
+RsaCipher ..> AesCipher : uses
 EllipticCurve ..> BigIntCalculator : uses
 
 AsymmetricKey <|-- PublicKey
