@@ -13,3 +13,4 @@ class CipherType(Enum):
     AES = "AES"
     RSA = "RSA"
     ECC = "ECC"
+    CHACHA20 = "CHACHA20"
