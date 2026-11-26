@@ -12,35 +12,34 @@ participant EllipticCurve
 participant "ECPoint / KeyPair" as ECCData
 participant AuditLogger
 
-User -> ConsoleMenu : HandleEncrypt()
+User -> ConsoleMenu : handle_encrypt()
 ConsoleMenu -> User : Yêu cầu dữ liệu, thuật toán,\nthông tin khóa
 User --> ConsoleMenu : Dữ liệu + ECC + khóa phù hợp
 
-ConsoleMenu -> CipherFactory : CreateAsymmetric(ECC, keyPair)
-CipherFactory -> EccCipher : khởi tạo EccCipher
+ConsoleMenu -> CipherFactory : create_asymmetric(ECC, keyPair)
+CipherFactory -> EccCipher : __init__(key_pair, curve=P-256)
+EccCipher -> EccCipher : load_public_key(public.export())\nload_private_key(private._get_material())
+EccCipher -> EllipticCurve : validate_public_key(ECPoint(x, y))
+EllipticCurve --> EccCipher : hợp lệ (hoặc CryptoException - QT6)
 EccCipher --> CipherFactory : cipher
 CipherFactory --> ConsoleMenu : ICipher
 
-ConsoleMenu -> SecureMessenger : SetCipher(cipher)
-ConsoleMenu -> SecureMessenger : Send(data)
-SecureMessenger -> EccCipher : Encrypt(data)
-
-EccCipher -> EllipticCurve : tạo/sử dụng điểm ECC hợp lệ
-EllipticCurve -> ECCData : kiểm tra / thao tác ECPoint
-ECCData --> EllipticCurve : kết quả điểm
-EllipticCurve --> EccCipher : kết quả phép toán ECC
-
-EccCipher -> EccCipher : DeriveSharedKey()
+ConsoleMenu -> SecureMessenger : set_cipher(cipher)
+ConsoleMenu -> SecureMessenger : send(data)
+SecureMessenger -> EccCipher : encrypt(data)
 note right of EccCipher
-  Thực hiện luồng ECIES theo
-  cấu hình triển khai của dự án.
-  Chi tiết KDF và đóng gói dữ liệu
-  cần thống nhất trong code.
+  CipherBase.encrypt kiểm tra dữ liệu
+  rồi gọi hook do_encrypt (Template Method)
 end note
 
-EccCipher --> SecureMessenger : ciphertext
+EccCipher -> EccCipher : generate_private_key(SECP256R1)\n(ephemeral, mỗi lần mã hóa)
+EccCipher -> EllipticCurve : validate_public_key(ephemeral point)
+EccCipher -> EccCipher : derive_shared_key(ephemeral, recipient)\nECDH + HKDF-SHA256 -> AES-256
+EccCipher -> EccCipher : AESGCM.encrypt(nonce 12 byte, data)
+EccCipher --> SecureMessenger : ephemeral(65) || nonce(12) || ct+tag
+
 SecureMessenger -> AuditLogger : MessageProcessed(event)
-AuditLogger -> AuditLogger : OnMessageProcessed(event)
+AuditLogger -> AuditLogger : on_message_processed(event)
 SecureMessenger --> ConsoleMenu : ciphertext
 ConsoleMenu --> User : Hiển thị bản mã
 @enduml
