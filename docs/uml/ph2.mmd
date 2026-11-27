@@ -1,0 +1,25 @@
+classDiagram
+AsymmetricKey <|-- PublicKey
+AsymmetricKey <|-- PrivateKey
+KeyPair *-- PublicKey
+KeyPair *-- PrivateKey
+ISigner <|.. RsaSigner
+ISigner <|.. EcdsaSigner
+IKeyRepository <|.. FileKeyRepository
+IKeyRepository <|.. InMemoryKeyRepository
+KeyService --> IKeyRepository
+KeyService ..> KeyPair
+KeyService ..> EllipticCurve
+SecureMessenger --> KeyService
+SecureMessenger o-- ISigner
+SecureMessenger o-- ICipher
+SecureMessenger ..> HashService
+SecureMessenger ..> DigitalSignature
+AuditLogger ..> SecureMessenger : subscribes
+ConsoleMenu --> SecureMessenger
+ConsoleMenu --> AuditLogger
+ConsoleMenu --> KeyService
+ConsoleMenu --> AppConfig
+ConsoleMenu --> User
+CryptoException <|-- KeyExpiredException
+CryptoException <|-- KeyRevokedException
